@@ -3,3 +3,6 @@ This repository contains the tools required for someone to verify the correctnes
 
 General Outline / Brainstorming:
 https://docs.google.com/document/d/1CyDupJ1XRwUHPTVWDCyCdqBmpvQlgkAmDezFPfhoG3A/edit?usp=sharing
+
+Plan for scripting:
+https://www.postgresqltutorial.com/postgresql-python/connect/
