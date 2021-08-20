@@ -6,3 +6,8 @@ https://docs.google.com/document/d/1CyDupJ1XRwUHPTVWDCyCdqBmpvQlgkAmDezFPfhoG3A/
 
 Plan for scripting:
 https://www.postgresqltutorial.com/postgresql-python/connect/
+
+Notes:
+We save on 1 level of sending if we construct the report in the host. 
+Although, the system wont be completely OS agnostic (which is part of the point of using docker containers)it can be adapted if need be.
+
