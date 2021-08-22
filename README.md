@@ -17,6 +17,8 @@ Although, the system wont be completely OS agnostic (which is part of the point 
 
 `psql -h <Host> -d <Database Name> -U <User> -W` - W indicates the login requires a password.
 
+`https://www.postgresql.org/docs/8.1/queries-limit.html` - Details the select, limit, and order by for postgres.
+
 Mac Users: Local PSQL
 `brew services start postgresql`
 `brew services stop postgresql`
@@ -42,6 +44,7 @@ Docker SDK for Python:
 https://docker-py.readthedocs.io/en/stable/
 
 # Psycopg2 Links
+Connect:
 https://www.postgresqltutorial.com/postgresql-python/connect/
-
-
+Cursor DB Management:
+www.psycopg.org/docs/cursor.html
