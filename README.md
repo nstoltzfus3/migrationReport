@@ -35,6 +35,13 @@ Same thing but using netstat:
 
 `docker containers prune` - delete all stopped containers.
 
+Docker run documentation:
+https://docs.docker.com/engine/reference/commandline/run/o
+
+Docker SDK for Python:
+https://docker-py.readthedocs.io/en/stable/
+
 # Psycopg2 Links
 https://www.postgresqltutorial.com/postgresql-python/connect/
+
 
