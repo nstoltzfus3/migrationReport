@@ -15,10 +15,26 @@ Although, the system wont be completely OS agnostic (which is part of the point 
 `\dt` - Displays tables
 `\du` - Displays users
 
-`psql -U <user> -W <password> -`
+`psql -h <Host> -d <Database Name> -U <User> -W` - W indicates the login requires a password.
+
+Mac Users: Local PSQL
+`brew services start postgresql`
+`brew services stop postgresql`
 
 # Netcat Commands
 These are really helpful if you have trouble setting up your DB due to port-in-use errors.
 
 `nc -zv <IP Address> <Port>` - Checks if there is something listening on this port and with what protocol.
+
+Same thing but using netstat:
+`netstat -vanp tcp | grep 3000`
+
+# Docker Commands
+`docker ps` - show all running docker containers.
+`-a` - shows all containers, regardless of running status.
+
+`docker containers prune` - delete all stopped containers.
+
+# Psycopg2 Links
+https://www.postgresqltutorial.com/postgresql-python/connect/
 
