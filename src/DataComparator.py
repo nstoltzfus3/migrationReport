@@ -40,8 +40,6 @@ class DataComparator:
                 return False
         return True
 
-
-
     def comparePrimaryKeys(self, a, b):
         # pretty straightforward if the Pks are at index 0.
         return a[0] == b[0]
@@ -60,28 +58,39 @@ class DataComparator:
         self.corruptionErrors.append([a, b])
         self.numCorruptionErrors += 1
 
+    def flushA(self):
+        for key in self.leftoverA:  # things leftover in A must be CopyOmissionErrors
+            self.addCopyOmissionError(self.leftoverA[key])
+        self.leftoverA.clear()  # we flush A, everything was a CopyOmissionError
+        self.largestAPrimaryKey = None
+
+    def flushB(self):
+        for key in self.leftoverB:  # things leftover in A must be Creation Errors
+            self.addCreationError(self.leftoverB[key])
+        self.leftoverB.clear()  # we flush A, everything was a CopyOmissionError
+        self.largestBPrimaryKey = None
+
     def prepareDataChunks(self, alist:List, blist:List):
         # we can flush the leftover A data if the largest primary key in A is smaller than the smallest primary Key
         # being offered by the data coming from B.
         # We have a guarantee that no data remaining in that hashmap can match anything coming from B.
+
         if (self.largestAPrimaryKey):
-            if (blist[0][0] > self.largestAPrimaryKey):
-                for key in self.leftoverA: # things leftover in A must be CopyOmissionErrors
-                    self.addCopyOmissionError(self.leftoverA[key])
-                self.leftoverA.clear() # we flush A, everything was a CopyOmissionError
-                self.largestAPrimaryKey = None
+            if (len(blist) > 0):
+                if (blist[0][0] > self.largestAPrimaryKey):
+                    self.flushA()
 
         # We likewise do the same for B.
         if (self.largestBPrimaryKey):
-            if (alist[0][0] > self.largestBPrimaryKey):
-                for key in self.leftoverB: # things leftover in A must be Creation Errors
-                    self.addCreationError(self.leftoverB[key])
-                self.leftoverB.clear() # we flush A, everything was a CopyOmissionError
-                self.largestBPrimaryKey = None
+            if (len(alist) > 0):
+                if (alist[0][0] > self.largestBPrimaryKey):
+                    self.flushB()
 
         # setup the new largest primary keys that will exist in each of the hashmaps.
-        self.largestAPrimaryKey = alist[len(alist) - 1][0]
-        self.largestBPrimaryKey = blist[len(blist) - 1][0]
+        if (len(alist) > 0):
+            self.largestAPrimaryKey = alist[len(alist) - 1][0]
+        if (len(blist) > 0):
+            self.largestBPrimaryKey = blist[len(blist) - 1][0]
 
         # we now add the data into their respective hashmaps.
         for row in alist:
@@ -89,6 +98,8 @@ class DataComparator:
             self.leftoverA[row[0]] = row
         for row in blist:
             self.leftoverB[row[0]] = row
+
+        self.processDataChunks(self.leftoverA, self.leftoverB)
 
 
 
@@ -112,6 +123,18 @@ class DataComparator:
         for primaryKey in poplist:
             aData.pop(primaryKey)
             bData.pop(primaryKey)
+
+    def receiveData(self, a:List, b:List):
+        self.prepareDataChunks(a, b)
+        self.processDataChunks(self.leftoverA, self.leftoverB)
+
+    def finish(self):
+        self.flushA()
+        self.flushB()
+
+        print("Corruption Error: %d" % self.numCorruptionErrors)
+        print("Creation Error: %d" % self.numCreationErrors)
+        print("Copy Omission Error: %d" % self.numCopyOmissionErrors)
 
 
 

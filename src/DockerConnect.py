@@ -1,5 +1,4 @@
 import requests
-import psycopg2
 import json
 import docker
 import subprocess
@@ -8,6 +7,8 @@ import time
 import requests
 
 from PSQLServer import PSQLServer
+from PsycoConnection import PsycoConnection
+from DataComparator import DataComparator
 
 
 class DockerConnect:
@@ -20,10 +21,15 @@ class DockerConnect:
         '''
 
         client = docker.from_env()
-
-        bashCommand = "docker run -d -p %d:5432 %s"
-
         self.dbs = {}
+        self.initialize(inifile, port)
+        self.containers = client.containers.list()
+        self.connections = []
+        self.connectToPsql()
+        self.verifyConnections()
+
+    def initialize(self, inifile, port):
+        bashCommand = "docker run -d -p %d:5432 %s"
         for line in open(inifile):
             # starts containers while distributing monotonically increasing ports.
             # Opted to bash launch the containers then scrape the containers off the daemon
@@ -38,13 +44,77 @@ class DockerConnect:
             process = subprocess.run((bashCommand % (port, line.split(',')[3])).split())
             port += 1
 
-        self.containers = client.containers.list()
+    def connectToPsql(self):
+        for container in self.containers[::-1]:
+            PSQLdb = self.dbs[container.image.attrs['RepoTags'][0]]
+            self.connections.append(PsycoConnection(PSQLdb))
 
+    def verifyConnections(self):
+        # this also handles the connection of the table name to the object, and ensures
+        # that the table in each database has equivalent names.
+        tableNames = None
+        for psycoconnection in self.connections:
+
+            cur = psycoconnection.cursor
+            cur.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+            psycoconnection.tablename = cur.fetchall()[0][0]
+            if not tableNames:
+                tableNames = cur.fetchall()
+            else:
+                if tableNames != cur.fetchall():
+                    print("No equivalent tables found.")
 
 
     def closeAll(self):
+        for psycoconnection in self.connections:
+            psycoconnection.close()
         for container in self.containers:
             container.kill()
+
+    def testData(self):
+        for psycoconnection in self.connections:
+            print(psycoconnection.query("select * from %s"))
+
+    def testLimitedData(self, n):
+        for psycoconnection in self.connections:
+            print(psycoconnection.query("select * from %s order by id asc", n))
+
+    def testFetchAllData(self, n):
+        response = True
+        for psycoconnection in self.connections:
+            out = psycoconnection.query("select * from %s order by id asc", n)
+
+        while(response):
+            response = False
+            for psycoconnection in self.connections:
+                out = psycoconnection.fetchNext()
+                print(out)
+                if (len(out) > 0):
+                    response = True
+
+    def compareData(self, n, dataComparator):
+        response = True
+
+        adata = self.connections[0].query("select * from %s order by id asc", n)
+        bData = self.connections[1].query("select * from %s order by id asc", n)
+        while (response):
+            response = False
+
+            a = self.connections[0].fetchNext()
+            b = self.connections[1].fetchNext()
+            dataComparator.prepareDataChunks(a, b)
+
+            if (len(a) > 0 or len(b) > 0):
+                response = True
+
+
+
+
+
+
+
+
+
 
 
 
@@ -57,31 +127,14 @@ class DockerConnectTest:
 
 if __name__ == "__main__":
     dc = DockerConnect("init.txt")
+    datacomparator = DataComparator()
+    N = 100
+    dc.compareData(N, datacomparator)
+    datacomparator.finish()
 
-    psqlConnections = []
-    for container in dc.containers[::-1]:
-        try:
-            PSQLdb = dc.dbs[container.image.attrs['RepoTags'][0]]
-            print("Database: %s running on port %d" % (PSQLdb.dbname, PSQLdb.port))
-
-            conn = psycopg2.connect(
-                host="localhost",
-                database=PSQLdb.dbname,
-                user=PSQLdb.user,
-                password=PSQLdb.password,
-                port=PSQLdb.port
-                )
-            psqlConnections.append(conn)
-            print("Connection established...")
-        except Exception as e:
-            print(e)
-
-    for connection in psqlConnections:
-        cur = connection.cursor()
-        cur.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
-        print(cur.fetchall())
 
     dc.closeAll()
+
 
 
 

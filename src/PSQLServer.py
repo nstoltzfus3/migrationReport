@@ -1,4 +1,4 @@
-
+from PsycoConnection import PsycoConnection
 
 class PSQLServer:
 
