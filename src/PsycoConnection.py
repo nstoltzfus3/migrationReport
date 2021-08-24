@@ -20,20 +20,24 @@ class PsycoConnection:
             self.cursor = self.conn.cursor()
 
     def establishConnections(self):
-            try:
-                print("Database: %s running on port %d" % (self.psqldb.dbname, self.psqldb.port))
+        '''
+        Creates a connection to a postgres database via psycopg2.
+        :return:
+        '''
+        try:
+            print("Database: %s running on port %d" % (self.psqldb.dbname, self.psqldb.port))
 
-                conn = psycopg2.connect(
-                    host="localhost",
-                    database=self.psqldb.dbname,
-                    user=self.psqldb.user,
-                    password=self.psqldb.password,
-                    port=self.psqldb.port
-                )
-                print("Psycopg2 connection established...")
-                self.conn = conn
-            except Exception as e:
-                print(e)
+            conn = psycopg2.connect(
+                host="localhost",
+                database=self.psqldb.dbname,
+                user=self.psqldb.user,
+                password=self.psqldb.password,
+                port=self.psqldb.port
+            )
+            print("Psycopg2 connection established...")
+            self.conn = conn
+        except Exception as e:
+            print(e)
 
     def query(self, psqlQuery:str, n=None):
         '''
