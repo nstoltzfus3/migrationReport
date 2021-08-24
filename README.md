@@ -13,32 +13,47 @@ Although, the system wont be completely OS agnostic (which is part of the point 
 
 # PSQL Documentation:
 `\dt` - Displays tables
+
+
 `\du` - Displays users
+
 
 `psql -h <Host> -d <Database Name> -U <User> -W` - W indicates the login requires a password.
 
+
 `https://www.postgresql.org/docs/8.1/queries-limit.html` - Details the select, limit, and order by for postgres.
+
 
 Mac Users: Local PSQL
 `brew services start postgresql`
+
+
 `brew services stop postgresql`
 
-# Netcat Commands
-These are really helpful if you have trouble setting up your DB due to port-in-use errors.
 
+# Netcat Commands
+These are really helpful if you have trouble setting up your DB due to port-in-use errors:
+
+Using netcat:
 `nc -zv <IP Address> <Port>` - Checks if there is something listening on this port and with what protocol.
+
 
 Same thing but using netstat:
 `netstat -vanp tcp | grep 3000`
 
 # Docker Commands
 `docker ps` - show all running docker containers.
+
+
 `-a` - shows all containers, regardless of running status.
+
 
 `docker containers prune` - delete all stopped containers.
 
+
 Docker run documentation:
 https://docs.docker.com/engine/reference/commandline/run/o
+
 
 Docker SDK for Python:
 https://docker-py.readthedocs.io/en/stable/
@@ -46,5 +61,7 @@ https://docker-py.readthedocs.io/en/stable/
 # Psycopg2 Links
 Connect:
 https://www.postgresqltutorial.com/postgresql-python/connect/
+
+
 Cursor DB Management:
 www.psycopg.org/docs/cursor.html
