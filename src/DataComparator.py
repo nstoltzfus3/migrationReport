@@ -1,9 +1,12 @@
 import queue
 from typing import List
+import csv
 
 class DataComparator:
 
     def __init__(self):
+        self.totalDocumentLength = 0
+
         self.corruptionErrors = []
         self.creationErrors = []
         self.copyOmissionErrors = []
@@ -132,9 +135,42 @@ class DataComparator:
         self.flushA()
         self.flushB()
 
-        print("Corruption Error: %d" % self.numCorruptionErrors)
-        print("Creation Error: %d" % self.numCreationErrors)
-        print("Copy Omission Error: %d" % self.numCopyOmissionErrors)
+        # print("Corruption Error: %d" % self.numCorruptionErrors)
+        # print("Creation Error: %d" % self.numCreationErrors)
+        # print("Copy Omission Error: %d" % self.numCopyOmissionErrors)
+
+    def produceReports(self):
+        with open("migration-report.txt", 'w') as f:
+            f.write('*' * 80 + '\n')
+            f.write("Migration Report\n")
+            f.write('*' * 80 + '\n\n')
+
+            f.write("Total Migration Errors:" + '\t'*7 + "%d" % (self.numCorruptionErrors + self.numCreationErrors + self.numCopyOmissionErrors))
+            f.write("\t\t")
+
+            f.write("\tTotal Rows Corrupted During Migration: \t\t%d\n" % self.numCorruptionErrors)
+            f.write("\tTotal Omitted Rows From Original: \t\t\t%d\n" % self.numCopyOmissionErrors)
+            f.write("\tTotal False Rows Created in Migrated: \t\t%d\n" % self.numCreationErrors)
+
+        with open("corruption-errors.csv", 'w') as f:
+            csvwriter = csv.writer(f, delimiter=',')
+            for corruptedSet in self.corruptionErrors:
+                csvwriter.writerow(corruptedSet[0])
+                csvwriter.writerow(corruptedSet[1])
+
+        with open("creation-errors.csv", 'w') as f:
+            csvwriter = csv.writer(f, delimiter=',')
+            for creationError in self.creationErrors:
+                csvwriter.writerow(creationError)
+
+        with open("omission-errors.csv", 'w') as f:
+            csvwriter = csv.writer(f, delimiter=',')
+            for omissionError in self.copyOmissionErrors:
+                csvwriter.writerow(omissionError)
+
+
+
+
 
 
 

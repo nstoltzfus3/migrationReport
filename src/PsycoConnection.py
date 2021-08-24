@@ -36,11 +36,6 @@ class PsycoConnection:
         print(self.tablename)
         self.cursor.execute(psqlQuery % self.tablename)
         self.n = n
-        # if (n):
-        #     # we will primarily be using this to get our data.
-        #     self.data = self.cursor.fetchmany(size=n)
-        #     return self.data
-        # return self.cursor.fetchall()
 
     def fetchNext(self):
         self.data = self.cursor.fetchmany(size=self.n)

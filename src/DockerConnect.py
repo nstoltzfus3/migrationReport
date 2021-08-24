@@ -131,6 +131,7 @@ if __name__ == "__main__":
     N = 100
     dc.compareData(N, datacomparator)
     datacomparator.finish()
+    datacomparator.produceReports()
 
 
     dc.closeAll()
