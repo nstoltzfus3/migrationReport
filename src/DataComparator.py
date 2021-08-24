@@ -65,30 +65,75 @@ class DataComparator:
     # TODO: move error tracking to the report compilation class.
 
     def addCopyOmissionError(self, data):
+        '''
+        Adds a copy omission error to the error tracking of the data comparator.
+        :param data: a single row from a database that was not correctly copied.
+        :return:
+        '''
         self.copyOmissionErrors.append(data)
         self.numCopyOmissionErrors += 1
 
     def addCreationError(self, data):
+        '''
+        Adds a creation error to the error tracking of the data comparator.
+        :param data: a single row from a database that was created during migration, but is false.
+        :return:
+        '''
         self.creationErrors.append(data)
         self.numCreationErrors += 1
 
     def addCorruptionError(self, a, b): # gets its own interface because its multiple data sources.
+        '''
+        Adds a corruption error to the error tracking of the data comparator.
+        :param a: The row from the original database.
+        :param b: The row containing the corrupted data from the post-migration database.
+        :return:
+        '''
         self.corruptionErrors.append([a, b])
         self.numCorruptionErrors += 1
 
     def flushA(self):
+        '''
+        Helper function that flushes the remaining results from LeftOverA's row tracking information,
+        into the CopyOmissionError pipeline. This is called when it is impossible for future data from
+        B to match any of the information in LeftOverA.
+
+        We do this to allow for future memory optimization
+        if there were large amounts of errors and we needed to write them to a file.
+        :return:
+        '''
         for key in self.leftoverA:  # things leftover in A must be CopyOmissionErrors
             self.addCopyOmissionError(self.leftoverA[key])
         self.leftoverA.clear()  # we flush A, everything was a CopyOmissionError
         self.largestAPrimaryKey = None
 
     def flushB(self):
+        '''
+        Helper function that flushes the remaining results from LeftOverB's row tracking information,
+        into the CreationError pipeline. This is called when it is impossible for future data from
+        A to match any of the information in LeftOverB.
+
+        We do this to allow for future memory optimization
+        if there were large amounts of errors and we needed to write them to a file.
+        :return:
+        '''
         for key in self.leftoverB:  # things leftover in A must be Creation Errors
             self.addCreationError(self.leftoverB[key])
         self.leftoverB.clear()  # we flush B, everything was a creation error.
         self.largestBPrimaryKey = None
 
     def prepareDataChunks(self, alist:List, blist:List):
+        '''
+        Loads chunks of information as lists of tuples into hashmaps for processing. Each tuple is a row
+        in the corresponding database.
+
+        Flushes any leftover rows from previous iterations into their corresponding error pipelines.
+
+        Automatically calls the next step in the process: ProcessDataChunks.
+        :param alist: data loaded from database A.
+        :param blist: data loaded from database B.
+        :return:
+        '''
         # we can flush the leftover A data if the largest primary key in A is smaller than the smallest primary Key
         # being offered by the data coming from B.
         # We have a guarantee that no data remaining in that hashmap can match anything coming from B.
@@ -122,9 +167,15 @@ class DataComparator:
         self.processDataChunks(self.leftoverA, self.leftoverB)
 
     def processDataChunks(self, aData:dict, bData:dict):
+        '''
+        Identifies any corruption errors within the corresponding data chunks via a hashmap lookup
+        then individual column comparison.
+        :param aData: a dictionary of row data from database A.
+        :param bData: a dictionary of row data from database B.
+        :return:
+        '''
         # we expect aData and bData to generally be the same size, but at the end of the function.
         # we expect them to differ, therefore, we check each time.
-
         poplist = []
         for primaryKey in aData:
             if (primaryKey in bData):
@@ -142,11 +193,12 @@ class DataComparator:
             aData.pop(primaryKey)
             bData.pop(primaryKey)
 
-    def receiveData(self, a:List, b:List):
-        self.prepareDataChunks(a, b)
-        self.processDataChunks(self.leftoverA, self.leftoverB)
 
     def finish(self):
+        '''
+        Flushes any remaining mismatches in the LeftOver hashmaps into their respective error counters.
+        :return:
+        '''
         self.flushA()
         self.flushB()
 
@@ -155,6 +207,11 @@ class DataComparator:
         # print("Copy Omission Error: %d" % self.numCopyOmissionErrors)
 
     def produceReports(self):
+        '''
+        Generate reports according to the gathered error data within the data comparator object.
+        :return: 
+        '''
+
         if (not 'reports' in os.listdir('./')):
             os.makedirs('../reports/')
         reportDir = "../reports/"
