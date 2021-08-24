@@ -3,9 +3,24 @@ from typing import List
 import csv
 
 class DataComparator:
+    """
+    Top level class for comparing data from two different relational databases and producing report files
+    from the resultant information. The report will detail three different types of migration errors
+    between two databases:
+    1. Corruption Errors - This occurs when an element in the database has had its data removed, but its
+                            primary key is left intact.
+    2. Copy Omission Errors - This occurs when an element in the pre-migration database does not get
+                            properly copied over to the post-migration database.
+    3. Creation Errors - This is when a false or invalid row is generated in the new database and is found to
+                            have no element with a similar primary key from the original database.
+
+    Note: This data comparator will not work if primary keys cannot be trusted (i.e. can be corrupted
+    or duplicated).
+    """
 
     def __init__(self):
-        self.totalDocumentLength = 0
+        self.totalTableSizeA = 0
+        self.totalTableSizeB = 0
 
         self.corruptionErrors = []
         self.creationErrors = []
@@ -70,13 +85,15 @@ class DataComparator:
     def flushB(self):
         for key in self.leftoverB:  # things leftover in A must be Creation Errors
             self.addCreationError(self.leftoverB[key])
-        self.leftoverB.clear()  # we flush A, everything was a CopyOmissionError
+        self.leftoverB.clear()  # we flush B, everything was a creation error.
         self.largestBPrimaryKey = None
 
     def prepareDataChunks(self, alist:List, blist:List):
         # we can flush the leftover A data if the largest primary key in A is smaller than the smallest primary Key
         # being offered by the data coming from B.
         # We have a guarantee that no data remaining in that hashmap can match anything coming from B.
+        self.totalTableSizeA += len(alist)
+        self.totalTableSizeB += len(blist)
 
         if (self.largestAPrimaryKey):
             if (len(blist) > 0):
@@ -104,10 +121,8 @@ class DataComparator:
 
         self.processDataChunks(self.leftoverA, self.leftoverB)
 
-
-
     def processDataChunks(self, aData:dict, bData:dict):
-        # we expect aData and bData to generally be the same size, but at the end of the function
+        # we expect aData and bData to generally be the same size, but at the end of the function.
         # we expect them to differ, therefore, we check each time.
 
         poplist = []
@@ -140,30 +155,37 @@ class DataComparator:
         # print("Copy Omission Error: %d" % self.numCopyOmissionErrors)
 
     def produceReports(self):
-        with open("migration-report.txt", 'w') as f:
+        reportDir = "../reports/"
+        with open(reportDir + "migration-report.txt", 'w') as f:
             f.write('*' * 80 + '\n')
             f.write("Migration Report\n")
             f.write('*' * 80 + '\n\n')
 
-            f.write("Total Migration Errors:" + '\t'*7 + "%d" % (self.numCorruptionErrors + self.numCreationErrors + self.numCopyOmissionErrors))
-            f.write("\t\t")
+            f.write("Total Rows Pre-migration:\t%d\n" % self.totalTableSizeA)
+            f.write("Total Rows Post-migration:\t%d\n\n" % self.totalTableSizeB)
+
+            f.write("Total Migration Errors:" + '\t'*7 + "%d" % (self.numCorruptionErrors +
+                                                                 self.numCreationErrors +
+                                                                 self.numCopyOmissionErrors))
+            f.write("\t%2.2f" % ((self.numCorruptionErrors + self.numCreationErrors + self.numCopyOmissionErrors) *
+                                 100.0 / self.totalTableSizeA ) + '%\n')
 
             f.write("\tTotal Rows Corrupted During Migration: \t\t%d\n" % self.numCorruptionErrors)
             f.write("\tTotal Omitted Rows From Original: \t\t\t%d\n" % self.numCopyOmissionErrors)
             f.write("\tTotal False Rows Created in Migrated: \t\t%d\n" % self.numCreationErrors)
 
-        with open("corruption-errors.csv", 'w') as f:
+        with open(reportDir + "corruption-errors.csv", 'w') as f:
             csvwriter = csv.writer(f, delimiter=',')
             for corruptedSet in self.corruptionErrors:
                 csvwriter.writerow(corruptedSet[0])
                 csvwriter.writerow(corruptedSet[1])
 
-        with open("creation-errors.csv", 'w') as f:
+        with open(reportDir + "creation-errors.csv", 'w') as f:
             csvwriter = csv.writer(f, delimiter=',')
             for creationError in self.creationErrors:
                 csvwriter.writerow(creationError)
 
-        with open("omission-errors.csv", 'w') as f:
+        with open(reportDir + "omission-errors.csv", 'w') as f:
             csvwriter = csv.writer(f, delimiter=',')
             for omissionError in self.copyOmissionErrors:
                 csvwriter.writerow(omissionError)

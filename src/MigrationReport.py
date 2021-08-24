@@ -11,7 +11,7 @@ from PsycoConnection import PsycoConnection
 from DataComparator import DataComparator
 
 
-class DockerConnect:
+class MigrationReport:
 
     def __init__(self, inifile, port=5432):
         '''
@@ -107,33 +107,13 @@ class DockerConnect:
             if (len(a) > 0 or len(b) > 0):
                 response = True
 
-
-
-
-
-
-
-
-
-
-
-
-class DockerConnectTest:
-    def __init__(self):
-        '''
-        Needs to generate and delete the files afterward. Proper Excepts
-        '''
-        pass
-
 if __name__ == "__main__":
-    dc = DockerConnect("init.txt")
+    dc = MigrationReport("init.txt")
     datacomparator = DataComparator()
     N = 100
     dc.compareData(N, datacomparator)
     datacomparator.finish()
     datacomparator.produceReports()
-
-
     dc.closeAll()
 
 

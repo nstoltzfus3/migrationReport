@@ -191,8 +191,11 @@ class TestDataComparator(unittest.TestCase):
     ################################# Begin Multi Chunk Verification Tests
     """
     These test the ability of the data comparator to take in multiple consecutive chunks of data at a time
-    and only evaluate the errors that could arise, while discarding all information that cannot
-    have errors.
+    and only evaluate the errors that could arise in this OR FUTURE LOADED CHUNKS, while discarding all 
+    information that cannot have errors.
+    
+    In short, when loading multiple consecutive chunks, the rows from each database will be preserved in a 
+    hashmap in between data chunk loads, until it is no longer possible to encounter a match for that row.
     """
     def testNoErrorsMulti(self):
         alist = []
