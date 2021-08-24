@@ -23,6 +23,10 @@ class TestDataComparator(unittest.TestCase):
         self.assertEqual(numCreationErrors, self.DataComparator.numCreationErrors)
 
     ########################## Begin Single Chunk Verification Tests
+    '''
+    These tests run single checks on blocks of similar data that are loaded into the data comparator.
+    '''
+
 
     def testEmptyData(self):
         alist = []
@@ -163,7 +167,7 @@ class TestDataComparator(unittest.TestCase):
         self.computeSingleChunk(alist, blist)
         self.assertErrorCount(100, 100, 100)
 
-    def IndividualHeavy(self):
+    def testIndividualHeavy(self):
         for i in range(100):
             self.DataComparator = DataComparator()
             alist = self.setupAData()
@@ -217,6 +221,16 @@ class TestDataComparator(unittest.TestCase):
         self.DataComparator.finish()
         self.assertErrorCount(0, 1, 0)
 
+    def testTwoOmissionErrorMulti(self):
+        alist = [(1, 2)]
+        blist = []
+        self.computeChunk(alist, blist)
+        alist = [(2, 3)]
+        blist = []
+        self.computeChunk(alist, blist)
+        self.DataComparator.finish()
+        self.assertErrorCount(0, 2, 0)
+
     def testOneCreationErrorMulti(self):
         alist = []
         blist = [(1, 2)]
@@ -227,6 +241,16 @@ class TestDataComparator(unittest.TestCase):
         self.DataComparator.finish()
         self.assertErrorCount(0, 0, 1)
 
+    def testTwoCreationErrorMulti(self):
+        alist = []
+        blist = [(1, 2)]
+        self.computeChunk(alist, blist)
+        alist = []
+        blist = [(2, 3)]
+        self.computeChunk(alist, blist)
+        self.DataComparator.finish()
+        self.assertErrorCount(0, 0, 2)
+
     def testOneCorruptionErrorMulti(self):
         alist = [(1, 1)]
         blist = [(1, 2)]
@@ -235,20 +259,27 @@ class TestDataComparator(unittest.TestCase):
         blist = []
         self.computeChunk(alist, blist)
         self.DataComparator.finish()
-        self.assertErrorCount(1,0,0)
+        self.assertErrorCount(1, 0, 0)
 
-    def testOneCorruptionErrorMulti(self):
+    def testTwoCorruptionErrorMulti(self):
         alist = [(1, 1)]
         blist = [(1, 2)]
         self.computeChunk(alist, blist)
         alist = [(2, 2)]
-        blist = [(2, 2)]
+        blist = [(2, 3)]
         self.computeChunk(alist, blist)
         self.DataComparator.finish()
-        self.assertErrorCount(1,0,0)
+        self.assertErrorCount(2, 0, 0)
 
 
     def setupAData(self, n=None):
+        '''
+        Generates a randomized database with rows between 1000 and 10000. We can tune the number of rows
+        with n if we choose. The number of elements in each row is a number between 2 and 20, including
+        primary key.
+        :param n: size of the database in rows
+        :return:
+        '''
         aPrimaryKeys = []
 
         count = 0
@@ -270,6 +301,14 @@ class TestDataComparator(unittest.TestCase):
         return aData
 
     def setupBData(self, aData, corruptionErrors, copyOmissionErrors, creationErrors):
+        '''
+        Copy an original database and simulate errors into a new database.
+        :param aData: the original database.
+        :param corruptionErrors: the number of corruption errors to introduce.
+        :param copyOmissionErrors: the number of omission errors to introduce.
+        :param creationErrors: the number of creation errors to introduce.
+        :return: the resultant post migration database with errors.
+        '''
         # avoid any referencing issues
         bData = copy.deepcopy(aData)
 
@@ -318,6 +357,12 @@ class TestDataComparator(unittest.TestCase):
         return bData
 
     def generateRandomRow(self, pk, rowWidth):
+        '''
+        Helper function to generate a randomized row given.
+        :param pk: primary key of the row in question.
+        :param rowWidth: the number of elements to append to the row.
+        :return:
+        '''
         row = [pk]
         for i in range(rowWidth - 1):
             # simulates creating data in the row
@@ -326,6 +371,12 @@ class TestDataComparator(unittest.TestCase):
         return row
 
     def getCorruptionError(self, aData, index):
+        '''
+        Helper function to generate a row with corrupted data but uncorrupted primary key.
+        :param aData: the original data.
+        :param index: the index of the original (ordered) query row.
+        :return:
+        '''
         corruptedRow = list([aData[index][0]]) # gets correct pk from old data.
         for column in aData[index][1:]:
             corruptedRow.append(column + 1)
