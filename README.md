@@ -26,10 +26,10 @@ This repository contains the tools required for someone to verify the correctnes
 2. Create a csv of (at least) 2 databases whos rows correspond with:
 
 
-`<user>,<database>,<password>,<docker_image>`
+    `<user>,<database>,<password>,<docker_image>`
 
 
-Each line must be valid and contain all of the above content.
+    Each line must be valid and contain all of the above content.
 
 
 
