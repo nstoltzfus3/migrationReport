@@ -2,6 +2,9 @@
 This repository contains the tools required for someone to verify the correctness of a database migration for docker images in postgresql.
 
 # Usage
+(Note: This system was developed on MacOS Catalina Version 10.15.6. It has not been tested on other systems.)
+
+
 1. `cd src` - Change into the source directory.
 2. Create a csv of (at least) 2 databases whos rows correspond with:
 
