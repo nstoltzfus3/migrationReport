@@ -30,6 +30,13 @@ class MigrationReport:
         self.dataComparator = None
 
     def initialize(self, inifile, port):
+        '''
+        Consumes the initialization file to launch docker containers with corresponding PSQL servers on monotonically
+        increasing ports on the host computer.
+        :param inifile: name of the initialization file.
+        :param port: starting port for multiple docker images to serve PSQL on.
+        :return:
+        '''
         bashCommand = "docker run -d -p %d:5432 %s"
         for line in open(inifile):
             # starts containers while distributing monotonically increasing ports.
@@ -46,11 +53,21 @@ class MigrationReport:
             port += 1
 
     def connectToPsql(self):
+        '''
+        Populates the list of connections by launching Psycopg2 and pointing it at each of the docker
+        containers launched with initialize().
+        :return:
+        '''
         for container in self.containers[::-1]:
             PSQLdb = self.dbs[container.image.attrs['RepoTags'][0]]
             self.connections.append(PsycoConnection(PSQLdb))
 
     def verifyConnections(self):
+        '''
+        Tries to make a basic connection with each of the databases. Ensures that the databases' tables
+        are named the same.
+        :return:
+        '''
         # this also handles the connection of the table name to the object, and ensures
         # that the table in each database has equivalent names.
         tableNames = None
@@ -67,20 +84,38 @@ class MigrationReport:
 
 
     def closeAll(self):
+        '''
+        Closes all the connections made via psycopg2 and deletes the docker processes.
+        :return:
+        '''
         for psycoconnection in self.connections:
             psycoconnection.close()
         for container in self.containers:
             container.kill()
 
     def testData(self):
+        '''
+        Test function that returns all information in a database.
+        :return:
+        '''
         for psycoconnection in self.connections:
             print(psycoconnection.query("select * from %s"))
 
     def testLimitedData(self, n):
+        '''
+        Test function that returns ordered and limited information from a database.
+        :param n: size of loaded chunk
+        :return:
+        '''
         for psycoconnection in self.connections:
             print(psycoconnection.query("select * from %s order by id asc", n))
 
     def testFetchAllData(self, n):
+        '''
+        Test function that retrieves information from the database, then consumes it in fixed chunk sizes.
+        :param n: size of loaded chunk.
+        :return:
+        '''
         response = True
         for psycoconnection in self.connections:
             out = psycoconnection.query("select * from %s order by id asc", n)
@@ -94,6 +129,15 @@ class MigrationReport:
                     response = True
 
     def compareData(self, n, dataComparator):
+        '''
+        We limit this application to 2 databases at a time, but make it easy to configure to many in series.
+
+
+        :param n: size of data chunk from databases.
+        :param dataComparator: a DataComparator() object that produces a running report of all errors encountered
+                                between database information chunks.
+        :return:
+        '''
         response = True
         self.dataComparator = dataComparator
 
@@ -121,7 +165,6 @@ if __name__ == "__main__":
     N = 100 # datachunk size
     mr.compareData(N, dc)
     mr.generateReport()
-
     mr.closeAll()
 
 

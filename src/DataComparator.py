@@ -209,7 +209,7 @@ class DataComparator:
     def produceReports(self):
         '''
         Generate reports according to the gathered error data within the data comparator object.
-        :return: 
+        :return:
         '''
 
         if (not 'reports' in os.listdir('./')):

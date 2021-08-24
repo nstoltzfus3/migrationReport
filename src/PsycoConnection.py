@@ -2,6 +2,10 @@ import psycopg2
 
 
 class PsycoConnection:
+    '''
+    Custom wrapper for Psycopg2 connection with a postgres database. Facilitates making connections and
+    maintaining cursors for ease of use.
+    '''
 
     def __init__(self, PSQLdb):
         self.psqldb = PSQLdb
@@ -32,15 +36,29 @@ class PsycoConnection:
                 print(e)
 
     def query(self, psqlQuery:str, n=None):
+        '''
+        Queries a database with the given query string. Psycopg2 keeps track of the response in memory.
+        :param psqlQuery: a string that contains postgres commands.
+        :param n: size of the data chunk to increment.
+        :return:
+        '''
         print(psqlQuery)
         print(self.tablename)
         self.cursor.execute(psqlQuery % self.tablename)
         self.n = n
 
     def fetchNext(self):
+        '''
+        Fetches the next chunk of data from the last query that was made.
+        :return:
+        '''
         self.data = self.cursor.fetchmany(size=self.n)
         return self.data
 
     def close(self):
+        '''
+        Closes the connection to the docker psql server.
+        :return:
+        '''
         self.cursor.close()
         self.conn.close()
