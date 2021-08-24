@@ -1,6 +1,7 @@
 import queue
 from typing import List
 import csv
+import os
 
 class DataComparator:
     """
@@ -48,7 +49,6 @@ class DataComparator:
         """
         # we assume primary keys are equal and occupy the zeroeth position,
         # if not, there must have been a missing element from the new database
-
         for i in range(1,len(a)):
             # start at 1 because we assume primary keys exist at index 0
             # we use database A's data as index because the migration likely appended or expanded
@@ -155,6 +155,8 @@ class DataComparator:
         # print("Copy Omission Error: %d" % self.numCopyOmissionErrors)
 
     def produceReports(self):
+        if (not 'reports' in os.listdir('./')):
+            os.makedirs('../reports/')
         reportDir = "../reports/"
         with open(reportDir + "migration-report.txt", 'w') as f:
             f.write('*' * 80 + '\n')
