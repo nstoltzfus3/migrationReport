@@ -1,2 +1,0 @@
-old,old,hehehe,guaranteedrate/homework-pre-migration:1607545060-a7085621
-new,new,hahaha,guaranteedrate/homework-post-migration:1607545060-a7085621
