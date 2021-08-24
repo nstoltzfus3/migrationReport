@@ -1,11 +1,28 @@
 # migrationReport
 This repository contains the tools required for someone to verify the correctness of a database migration for docker images in postgresql.
 
+# Setup
+1. `python3 -m venv /path/to/new/virtual/environment` - Create a new virtual environment.
+
+
+2. `source ./venv/bin/activate` - activate virtual environment
+
+
+3. `pip install -r requirements.txt` - install all dependencies.
+
+
+4. Ensure that you have docker setup.
+
+
+5. Continue to usage.
+
 # Usage
-(Note: This system was developed on MacOS Catalina Version 10.15.6. It has not been tested on other systems.)
+(Note: This system was developed on MacOS Catalina Version 10.15.6, using Python 3.7. It has not been tested on other systems.)
 
 
 1. `cd src` - Change into the source directory.
+
+
 2. Create a csv of (at least) 2 databases whos rows correspond with:
 
 
@@ -13,8 +30,20 @@ This repository contains the tools required for someone to verify the correctnes
 
 
 Each line must be valid and contain all of the above content.
+
+
+
 3. `python3 MigrationReport.py` - Run the main database verification.
+
+
+
 4. Reports will be written into the top level `reports` directory.
+
+# Testing
+1. `cd src/` - Change into the source directory.
+
+
+2. `python TestDataComparator.py` - test the data comparator.
 
 
 # Notes
