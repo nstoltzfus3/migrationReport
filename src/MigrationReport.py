@@ -27,6 +27,7 @@ class MigrationReport:
         self.connections = []
         self.connectToPsql()
         self.verifyConnections()
+        self.dataComparator = None
 
     def initialize(self, inifile, port):
         bashCommand = "docker run -d -p %d:5432 %s"
@@ -94,6 +95,7 @@ class MigrationReport:
 
     def compareData(self, n, dataComparator):
         response = True
+        self.dataComparator = dataComparator
 
         adata = self.connections[0].query("select * from %s order by id asc", n)
         bData = self.connections[1].query("select * from %s order by id asc", n)
@@ -106,15 +108,21 @@ class MigrationReport:
 
             if (len(a) > 0 or len(b) > 0):
                 response = True
+        dataComparator.finish()
+
+    def generateReport(self):
+        self.dataComparator.produceReports()
 
 if __name__ == "__main__":
-    dc = MigrationReport("init.txt")
-    datacomparator = DataComparator()
-    N = 100
-    dc.compareData(N, datacomparator)
-    datacomparator.finish()
-    datacomparator.produceReports()
-    dc.closeAll()
+    mr = MigrationReport("init.txt")
+
+    # The migration report generator takes in a datacomparator object.
+    dc = DataComparator()
+    N = 100 # datachunk size
+    mr.compareData(N, dc)
+    mr.generateReport()
+
+    mr.closeAll()
 
 
 
